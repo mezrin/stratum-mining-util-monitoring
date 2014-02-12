@@ -3,6 +3,8 @@
 #include <QtCore/QTextCodec>
 #include <QtCore/QLocale>
 
+#include "adaemon.h"
+
 #include <QDebug>
 
 // ========================================================================== //
@@ -70,6 +72,9 @@ int main(int argc, char *argv[]) {
         = cmd_line_parser.value(checking_interval_option).toInt(&ok);
     if(ok && checking_interval_value > 0)
         checking_interval_seconds = checking_interval_value;
+
+    ADaemon daemon(&app);
+    QObject::connect(&daemon, SIGNAL(sigterm()), &app, SLOT(quit()));
 
 qDebug() << host << port << dname << checking_interval_seconds;
 
