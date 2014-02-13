@@ -69,6 +69,12 @@ ADaemon::ADaemon(QObject *parent)
         connect(_sig_term_socket_notifier, SIGNAL(activated(int))
             , this, SLOT(onSigTermHandle()));
     }
+
+    _socket = new QTcpSocket(this);
+    connect(_socket, SIGNAL(connected()), this, SLOT(onSocketConnected()));
+    connect(_socket, SIGNAL(readyRead()), this, SLOT(onSocketReadyRead()));
+    connect(_socket, SIGNAL(error(QAbstractSocket::SocketError))
+        , this, SLOT(onSocketError(QAbstractSocket::SocketError)));
 }
 
 
@@ -103,6 +109,14 @@ void ADaemon::setCheckingInterval(int interval) {
 
 
 // ========================================================================== //
+// Слот выполнения подключения.
+// ========================================================================== //
+void ADaemon::onConnectToStratum() {
+    _socket->abort(); _socket->connectToHost(_stratum_host, _stratum_port);
+}
+
+
+// ========================================================================== //
 // Слот сигнала потери соединения с управляющим терминалом.
 // ========================================================================== //
 void ADaemon::onSigHupHandle() {
@@ -131,4 +145,47 @@ void ADaemon::onSigTermHandle() {
     _sig_term_socket_notifier->setEnabled(true);
 
     emit sigterm();
+}
+
+#include <QDebug>
+// ========================================================================== //
+// Слот подключения сокета.
+// ========================================================================== //
+void ADaemon::onSocketConnected() {
+    qWarning("connected - qwarning"); qDebug("connected - qdebug");
+}
+
+
+// ========================================================================== //
+// Слот приёма сетевых сообщений.
+// ========================================================================== //
+void ADaemon::onSocketReadyRead() {
+    QByteArray data;
+
+    QDataStream in(_socket);
+    in >> data;
+
+    qDebug() << data;
+}
+
+
+// ========================================================================== //
+// Слот обработки ошибок сетевой передачи данных.
+// ========================================================================== //
+void ADaemon::onSocketError(QAbstractSocket::SocketError error) {
+    switch(error) {
+        case QAbstractSocket::RemoteHostClosedError: break;
+
+        case QAbstractSocket::HostNotFoundError:
+            qWarning("The host was not found. Please check the host name" \
+                " and port settings.");
+
+        break;
+
+        case QAbstractSocket::ConnectionRefusedError:
+            qWarning("The connection was refused by the peer.");
+        break;
+
+        default: qWarning("The unknown error occurred."); break;
+    }
 }

@@ -1,4 +1,4 @@
-QT += core
+QT += core network
 
 QT -= gui
 
@@ -17,3 +17,6 @@ SOURCES += main.cpp \
 
 HEADERS += \
 	adaemon.h
+
+OTHER_FILES += \
+	README.md

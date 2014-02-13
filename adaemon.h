@@ -4,6 +4,8 @@
 #include <QtCore/QSocketNotifier>
 #include <QtCore/QObject>
 
+#include <QtNetwork/QTcpSocket>
+
 class ADaemon : public QObject {
     Q_OBJECT
 
@@ -36,6 +38,10 @@ class ADaemon : public QObject {
         //! Функция установки интервала проверки.
         void setCheckingInterval(int interval);
 
+    public slots:
+        //! Слот выполнения подключения.
+        void onConnectToStratum();
+
     private:
         QSocketNotifier *_sig_hup_socket_notifier, *_sig_term_socket_notifier;
 
@@ -45,12 +51,23 @@ class ADaemon : public QObject {
 
         int _checking_interval;
 
+        QTcpSocket *_socket;
+
     private slots:
         //! Слот сигнала потери соединения с управляющим терминалом.
         void onSigHupHandle();
 
         //! Слот сигнала запроса завершения процесса.
         void onSigTermHandle();
+
+        //! Слот подключения сокета.
+        void onSocketConnected();
+
+        //! Слот приёма сетевых сообщений.
+        void onSocketReadyRead();
+
+        //! Слот обработки ошибок сетевой передачи данных.
+        void onSocketError(QAbstractSocket::SocketError error);
 
 };
 

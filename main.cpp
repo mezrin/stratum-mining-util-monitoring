@@ -61,5 +61,8 @@ int main(int argc, char *argv[]) {
     daemon.setCheckingInterval(
         cmd_line_parser.value(checking_interval_option).toInt());
 
+    QMetaObject::invokeMethod(&daemon, "onConnectToStratum"
+        , Qt::QueuedConnection);
+
     return app.exec();
 }
