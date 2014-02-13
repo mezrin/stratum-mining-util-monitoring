@@ -6,12 +6,14 @@ TARGET = stratumon
 
 CONFIG += console
 
+CONFIG += static
+
 CONFIG -= app_bundle
 
 TEMPLATE = app
 
 SOURCES += main.cpp \
-    adaemon.cpp
+	adaemon.cpp
 
 HEADERS += \
-    adaemon.h
+	adaemon.h

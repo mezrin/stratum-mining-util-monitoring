@@ -24,8 +24,26 @@ class ADaemon : public QObject {
         //! Деструктор.
         virtual ~ADaemon() {}
 
+        //! Функция установки хоста.
+        void setStratumHost(const QString &host);
+
+        //! Функция установки порта.
+        void setStratumPort(int port);
+
+        //! Функция установки директории.
+        void setStratumDirPath(const QString &dname);
+
+        //! Функция установки интервала проверки.
+        void setCheckingInterval(int interval);
+
     private:
         QSocketNotifier *_sig_hup_socket_notifier, *_sig_term_socket_notifier;
+
+        QString _stratum_host, _stratum_dname;
+
+        int _stratum_port;
+
+        int _checking_interval;
 
     private slots:
         //! Слот сигнала потери соединения с управляющим терминалом.

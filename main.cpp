@@ -5,8 +5,6 @@
 
 #include "adaemon.h"
 
-#include <QDebug>
-
 // ========================================================================== //
 //
 // ========================================================================== //
@@ -20,9 +18,8 @@ int main(int argc, char *argv[]) {
     QLocale::setDefault(QLocale(QLocale::Russian, QLocale::RussianFederation));
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF-8"));
 
-    QString host = "localhost", dname = QCoreApplication::applicationDirPath();
-
-    int port = 3337, checking_interval_seconds = 5;
+    ADaemon daemon(&app);
+    QObject::connect(&daemon, SIGNAL(sigterm()), &app, SLOT(quit()));
 
     QCommandLineParser cmd_line_parser;
     cmd_line_parser.setApplicationDescription("stratumon");
@@ -58,25 +55,11 @@ int main(int argc, char *argv[]) {
     cmd_line_parser.addOption(checking_interval_option);
     cmd_line_parser.process(app);
 
-    QString host_value = cmd_line_parser.value(host_option);
-    if(!host_value.isEmpty()) host = host_value;
-
-    bool ok = false;
-    int port_value = cmd_line_parser.value(port_option).toInt(&ok);
-    if(ok && port_value > 0) port = port_value;
-
-    QString dname_value = cmd_line_parser.value(dir_option);
-    if(!dname_value.isEmpty()) dname = dname_value;
-
-    int checking_interval_value
-        = cmd_line_parser.value(checking_interval_option).toInt(&ok);
-    if(ok && checking_interval_value > 0)
-        checking_interval_seconds = checking_interval_value;
-
-    ADaemon daemon(&app);
-    QObject::connect(&daemon, SIGNAL(sigterm()), &app, SLOT(quit()));
-
-qDebug() << host << port << dname << checking_interval_seconds;
+    daemon.setStratumHost(cmd_line_parser.value(host_option));
+    daemon.setStratumPort(cmd_line_parser.value(port_option).toInt());
+    daemon.setStratumDirPath(cmd_line_parser.value(dir_option));
+    daemon.setCheckingInterval(
+        cmd_line_parser.value(checking_interval_option).toInt());
 
     return app.exec();
 }

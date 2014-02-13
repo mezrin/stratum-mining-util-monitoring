@@ -2,6 +2,8 @@
 #include <sys/socket.h>
 #include <signal.h>
 
+#include <QtCore/QCoreApplication>
+
 #include "adaemon.h"
 
 static int _g_sig_hup_fd[2], _g_sig_term_fd[2];
@@ -29,7 +31,12 @@ void ADaemon::sigTermHandler(int) {
 // ========================================================================== //
 // Конструктор.
 // ========================================================================== //
-ADaemon::ADaemon(QObject *parent) : QObject(parent) {
+ADaemon::ADaemon(QObject *parent)
+    : QObject(parent), _sig_hup_socket_notifier(NULL)
+    , _sig_term_socket_notifier(NULL), _stratum_host("localhost")
+    , _stratum_dname(QCoreApplication::applicationDirPath())
+    , _stratum_port(3337), _checking_interval(5) {
+
     struct sigaction hup;
     hup.sa_handler = ADaemon::sigHupHandler;
     sigemptyset(&hup.sa_mask);
@@ -62,6 +69,36 @@ ADaemon::ADaemon(QObject *parent) : QObject(parent) {
         connect(_sig_term_socket_notifier, SIGNAL(activated(int))
             , this, SLOT(onSigTermHandle()));
     }
+}
+
+
+// ========================================================================== //
+// Функция установки хоста.
+// ========================================================================== //
+void ADaemon::setStratumHost(const QString &host) {
+    if(!host.isEmpty()) _stratum_host = host;
+}
+
+
+// ========================================================================== //
+// Функция установки порта.
+// ========================================================================== //
+void ADaemon::setStratumPort(int port) {if(port > 0) _stratum_port = port;}
+
+
+// ========================================================================== //
+// Функция установки директории.
+// ========================================================================== //
+void ADaemon::setStratumDirPath(const QString &dname) {
+    if(!dname.isEmpty()) _stratum_dname = dname;
+}
+
+
+// ========================================================================== //
+// Функция установки интервала проверки.
+// ========================================================================== //
+void ADaemon::setCheckingInterval(int interval) {
+    if(interval > 0) _checking_interval = interval;
 }
 
 
