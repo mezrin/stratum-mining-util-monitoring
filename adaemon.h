@@ -6,6 +6,8 @@
 
 #include <QtNetwork/QTcpSocket>
 
+class QProcess;
+
 class ADaemon : public QObject {
     Q_OBJECT
 
@@ -54,6 +56,8 @@ class ADaemon : public QObject {
         bool _successed;
 
         QTcpSocket *_socket;
+
+        QProcess *_process;
 
     private slots:
         //! Слот сигнала потери соединения с управляющим терминалом.

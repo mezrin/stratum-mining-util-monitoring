@@ -78,6 +78,9 @@ ADaemon::ADaemon(QObject *parent)
     connect(_socket, SIGNAL(readyRead()), this, SLOT(onSocketReadyRead()));
     connect(_socket, SIGNAL(error(QAbstractSocket::SocketError))
         , this, SLOT(onSocketError(QAbstractSocket::SocketError)));
+
+    _process = new QProcess(this);
+    _process->setWorkingDirectory(_stratum_dname);
 }
 
 
@@ -99,7 +102,9 @@ void ADaemon::setStratumPort(int port) {if(port > 0) _stratum_port = port;}
 // Функция установки директории.
 // ========================================================================== //
 void ADaemon::setStratumDirPath(const QString &dname) {
-    if(!dname.isEmpty()) _stratum_dname = dname;
+    if(!dname.isEmpty()) {
+        _stratum_dname = dname; _process->setWorkingDirectory(dname);
+    }
 }
 
 
@@ -190,7 +195,12 @@ void ADaemon::onSocketReadyRead() {
 // ========================================================================== //
 void ADaemon::onSocketError(QAbstractSocket::SocketError error) {
     switch(error) {
-        case QAbstractSocket::RemoteHostClosedError: break;
+        case QAbstractSocket::RemoteHostClosedError:
+            QTimer::singleShot(_checking_interval*1000
+                , this, SLOT(onConnectToStratum()));
+
+            return;
+        break;
 
         case QAbstractSocket::HostNotFoundError:
             qWarning("The host was not found. Please check the host name" \
@@ -200,6 +210,11 @@ void ADaemon::onSocketError(QAbstractSocket::SocketError error) {
 
         case QAbstractSocket::ConnectionRefusedError:
             qWarning("The connection was refused by the peer.");
+
+            QTimer::singleShot(_checking_interval*1000
+                , this, SLOT(onConnectToStratum()));
+
+            return;
         break;
 
         default:
@@ -222,17 +237,15 @@ void ADaemon::onSocketDataWaitingError() {
     if(stratum_pidfile.open(QFile::ReadOnly)) {
         QByteArray pid_data = stratum_pidfile.readAll();
 
+        stratum_pidfile.close();
+
         bool ok = false;
         int pid = pid_data.toInt(&ok);
         if(ok) {
-            QProcess process;
-            process.start("kill -9 " + QString::number(pid));
-            process.waitForFinished();
-            process.start(_stratum_dname + "/twistd -y launcher.tac");
-            process.waitForFinished();
-
-            QTimer::singleShot(_checking_interval*1000
-                , this, SLOT(onConnectToStratum()));
+            _process->start("kill -9 " + QString::number(pid));
+            _process->waitForFinished();
+            _process->start("twistd -y launcher.tac");
+            _process->waitForFinished();
         }
     }
 }
