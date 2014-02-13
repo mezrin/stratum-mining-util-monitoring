@@ -51,6 +51,8 @@ class ADaemon : public QObject {
 
         int _checking_interval;
 
+        bool _successed;
+
         QTcpSocket *_socket;
 
     private slots:
@@ -68,6 +70,9 @@ class ADaemon : public QObject {
 
         //! Слот обработки ошибок сетевой передачи данных.
         void onSocketError(QAbstractSocket::SocketError error);
+
+        //! Слот безуспешного ожидания данных.
+        void onSocketDataWaitingError();
 
 };
 

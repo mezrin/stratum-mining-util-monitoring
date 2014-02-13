@@ -3,6 +3,9 @@
 #include <signal.h>
 
 #include <QtCore/QCoreApplication>
+#include <QtCore/QProcess>
+#include <QtCore/QTimer>
+#include <QtCore/QFile>
 
 #include "adaemon.h"
 
@@ -35,7 +38,7 @@ ADaemon::ADaemon(QObject *parent)
     : QObject(parent), _sig_hup_socket_notifier(NULL)
     , _sig_term_socket_notifier(NULL), _stratum_host("localhost")
     , _stratum_dname(QCoreApplication::applicationDirPath())
-    , _stratum_port(3337), _checking_interval(5) {
+    , _stratum_port(3337), _checking_interval(5), _successed(false) {
 
     struct sigaction hup;
     hup.sa_handler = ADaemon::sigHupHandler;
@@ -147,12 +150,25 @@ void ADaemon::onSigTermHandle() {
     emit sigterm();
 }
 
-#include <QDebug>
+
 // ========================================================================== //
 // Слот подключения сокета.
 // ========================================================================== //
 void ADaemon::onSocketConnected() {
-    qWarning("connected - qwarning"); qDebug("connected - qdebug");
+    qDebug("Connect to Stratum is successed!");
+    qDebug("Send data...");
+
+    _successed = false;
+
+    QTimer::singleShot(5000, this, SLOT(onSocketDataWaitingError()));
+
+    QByteArray data;
+    data.append("{");
+    data.append("\"id\": 1");
+    data.append(", \"method\": \"mining.subscribe\"");
+    data.append(", \"params\": []");
+    data.append("}\n");
+    _socket->write(data);
 }
 
 
@@ -160,12 +176,12 @@ void ADaemon::onSocketConnected() {
 // Слот приёма сетевых сообщений.
 // ========================================================================== //
 void ADaemon::onSocketReadyRead() {
-    QByteArray data;
+    qDebug("Stratum is alive!");
 
-    QDataStream in(_socket);
-    in >> data;
+    _successed = true; _socket->close();
 
-    qDebug() << data;
+    QTimer::singleShot(_checking_interval*1000
+        , this, SLOT(onConnectToStratum()));
 }
 
 
@@ -186,6 +202,37 @@ void ADaemon::onSocketError(QAbstractSocket::SocketError error) {
             qWarning("The connection was refused by the peer.");
         break;
 
-        default: qWarning("The unknown error occurred."); break;
+        default:
+            qWarning("The unknown error occurred. Please check" \
+                " the host name and port settings.");
+        break;
+    }
+
+    qApp->quit();
+}
+
+
+// ========================================================================== //
+// Слот безуспешного ожидания данных.
+// ========================================================================== //
+void ADaemon::onSocketDataWaitingError() {
+    if(_successed) return;
+
+    QFile stratum_pidfile(_stratum_dname + "/twistd.pid");
+    if(stratum_pidfile.open(QFile::ReadOnly)) {
+        QByteArray pid_data = stratum_pidfile.readAll();
+
+        bool ok = false;
+        int pid = pid_data.toInt(&ok);
+        if(ok) {
+            QProcess process;
+            process.start("kill -9 " + QString::number(pid));
+            process.waitForFinished();
+            process.start(_stratum_dname + "/twistd -y launcher.tac");
+            process.waitForFinished();
+
+            QTimer::singleShot(_checking_interval*1000
+                , this, SLOT(onConnectToStratum()));
+        }
     }
 }
