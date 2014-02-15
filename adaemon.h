@@ -59,6 +59,9 @@ class ADaemon : public QObject {
 
         QProcess *_process;
 
+        //! Функция создания PID-файла.
+        void createPidFile();
+
     private slots:
         //! Слот сигнала потери соединения с управляющим терминалом.
         void onSigHupHandle();

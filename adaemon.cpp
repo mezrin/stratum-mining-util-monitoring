@@ -81,6 +81,8 @@ ADaemon::ADaemon(QObject *parent)
 
     _process = new QProcess(this);
     _process->setWorkingDirectory(_stratum_dname);
+
+    createPidFile();
 }
 
 
@@ -104,6 +106,8 @@ void ADaemon::setStratumPort(int port) {if(port > 0) _stratum_port = port;}
 void ADaemon::setStratumDirPath(const QString &dname) {
     if(!dname.isEmpty()) {
         _stratum_dname = dname; _process->setWorkingDirectory(dname);
+
+        createPidFile();
     }
 }
 
@@ -121,6 +125,18 @@ void ADaemon::setCheckingInterval(int interval) {
 // ========================================================================== //
 void ADaemon::onConnectToStratum() {
     _socket->abort(); _socket->connectToHost(_stratum_host, _stratum_port);
+}
+
+
+// ========================================================================== //
+// Функция создания PID-файла.
+// ========================================================================== //
+void ADaemon::createPidFile() {
+    QFile pidfile(_stratum_dname + "/stratumon.pid");
+    if(pidfile.open(QFile::WriteOnly)) {
+        pidfile.write(QByteArray::number(qApp->applicationPid()));
+        pidfile.close();
+    }
 }
 
 
