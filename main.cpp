@@ -56,12 +56,12 @@ int startProcess(int argc, char *argv[]) {
         QStringList() << "t" << "terminal",
             QCoreApplication::translate("main"
                 , "Start application in interactive mode."));
-    cmd_line_parser.addOption(service_option);
 
     cmd_line_parser.addOption(host_option);
     cmd_line_parser.addOption(port_option);
     cmd_line_parser.addOption(dir_option);
     cmd_line_parser.addOption(checking_interval_option);
+    cmd_line_parser.addOption(service_option);
     cmd_line_parser.process(app);
 
     daemon.setStratumHost(cmd_line_parser.value(host_option));
