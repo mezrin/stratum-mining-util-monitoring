@@ -1,3 +1,6 @@
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QTextCodec>
@@ -6,9 +9,9 @@
 #include "adaemon.h"
 
 // ========================================================================== //
-//
+// Функция запуска процесса.
 // ========================================================================== //
-int main(int argc, char *argv[]) {
+int startProcess(int argc, char *argv[]) {
     QCoreApplication::setOrganizationName("AlexisSoft");
     QCoreApplication::setOrganizationDomain("free-lance.ru");
     QCoreApplication::setApplicationName("stratumon");
@@ -49,6 +52,12 @@ int main(int argc, char *argv[]) {
                 , "Stratum checking interval, default 5"),
             QCoreApplication::translate("main", "seconds"));
 
+    QCommandLineOption service_option(
+        QStringList() << "t" << "terminal",
+            QCoreApplication::translate("main"
+                , "Start application in interactive mode."));
+    cmd_line_parser.addOption(service_option);
+
     cmd_line_parser.addOption(host_option);
     cmd_line_parser.addOption(port_option);
     cmd_line_parser.addOption(dir_option);
@@ -65,4 +74,33 @@ int main(int argc, char *argv[]) {
         , Qt::QueuedConnection);
 
     return app.exec();
+}
+
+
+// ========================================================================== //
+//
+// ========================================================================== //
+int main(int argc, char *argv[]) {
+    bool has_terminal = false;
+    for(int i = 1; i < argc; ++i) {
+        QString arg = argv[i];
+        if(arg == "-t" || arg == "--terminal") {has_terminal = true; break;}
+    }
+
+    if(has_terminal) return startProcess(argc, argv);
+
+    int pid = fork();
+    if(pid == -1) return -1;
+
+    if(!pid) {
+        umask(0); setsid(); int r = chdir("/"); Q_UNUSED(r);
+
+        close(STDIN_FILENO);
+        close(STDOUT_FILENO);
+        close(STDERR_FILENO);
+
+        return startProcess(argc, argv);
+    }
+
+    return 0;
 }
