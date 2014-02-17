@@ -168,6 +168,9 @@ void ADaemon::onSigTermHandle() {
 
     _sig_term_socket_notifier->setEnabled(true);
 
+    QFile pidfile(_stratum_dname + "/stratumon.pid");
+    if(pidfile.exists()) pidfile.remove();
+
     emit sigterm();
 }
 
