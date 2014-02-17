@@ -87,6 +87,15 @@ ADaemon::ADaemon(QObject *parent)
 
 
 // ========================================================================== //
+// Деструктор.
+// ========================================================================== //
+ADaemon::~ADaemon() {
+    QFile pidfile(_stratum_dname + "/stratumon.pid");
+    if(pidfile.exists()) pidfile.remove();
+}
+
+
+// ========================================================================== //
 // Функция установки хоста.
 // ========================================================================== //
 void ADaemon::setStratumHost(const QString &host) {
@@ -167,9 +176,6 @@ void ADaemon::onSigTermHandle() {
     Q_UNUSED(r);
 
     _sig_term_socket_notifier->setEnabled(true);
-
-    QFile pidfile(_stratum_dname + "/stratumon.pid");
-    if(pidfile.exists()) pidfile.remove();
 
     emit sigterm();
 }

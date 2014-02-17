@@ -26,7 +26,7 @@ class ADaemon : public QObject {
         explicit ADaemon(QObject *parent = NULL);
 
         //! Деструктор.
-        virtual ~ADaemon() {}
+        virtual ~ADaemon();
 
         //! Функция установки хоста.
         void setStratumHost(const QString &host);
