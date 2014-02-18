@@ -141,10 +141,29 @@ void ADaemon::onConnectToStratum() {
 // Функция создания PID-файла.
 // ========================================================================== //
 void ADaemon::createPidFile() {
-    QFile pidfile(_stratum_dname + "/stratumon.pid");
-    if(pidfile.open(QFile::WriteOnly)) {
-        pidfile.write(QByteArray::number(qApp->applicationPid()));
-        pidfile.close();
+    QString fname = _stratum_dname + "/stratumon.pid";
+    if(QFile::exists(fname)) {
+        QFile file(fname);
+        if(file.open(QFile::ReadOnly)) {
+            bool ok = false;
+            int pid = file.readAll().toInt(&ok);
+            if(ok) {
+                _process->start("ps -p " + QString::number(pid));
+                _process->waitForFinished();
+                if(_process->readAll().contains(QByteArray::number(pid))) {
+                    _process->start("kill " + QString::number(pid));
+                    _process->waitForFinished();
+                }
+            }
+
+            file.close(); file.remove();
+        }
+    }
+
+    QFile file(fname);
+    if(file.open(QFile::WriteOnly)) {
+        file.write(QByteArray::number(qApp->applicationPid()));
+        file.close();
     }
 }
 
