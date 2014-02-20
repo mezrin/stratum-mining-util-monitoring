@@ -21,9 +21,6 @@ int startProcess(int argc, char *argv[]) {
     QLocale::setDefault(QLocale(QLocale::Russian, QLocale::RussianFederation));
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF-8"));
 
-    ADaemon daemon(&app);
-    QObject::connect(&daemon, SIGNAL(sigterm()), &app, SLOT(quit()));
-
     QCommandLineParser cmd_line_parser;
     cmd_line_parser.setApplicationDescription("stratumon");
     cmd_line_parser.addHelpOption();
@@ -64,14 +61,19 @@ int startProcess(int argc, char *argv[]) {
     cmd_line_parser.addOption(service_option);
     cmd_line_parser.process(app);
 
-    daemon.setStratumHost(cmd_line_parser.value(host_option));
-    daemon.setStratumPort(cmd_line_parser.value(port_option).toInt());
-    daemon.setStratumDirPath(cmd_line_parser.value(dir_option));
-    daemon.setCheckingInterval(
-        cmd_line_parser.value(checking_interval_option).toInt());
+    if(!cmd_line_parser.isSet(service_option)) {
+        ADaemon daemon(&app);
+        QObject::connect(&daemon, SIGNAL(sigterm()), &app, SLOT(quit()));
 
-    QMetaObject::invokeMethod(&daemon, "onConnectToStratum"
-        , Qt::QueuedConnection);
+        daemon.setStratumHost(cmd_line_parser.value(host_option));
+        daemon.setStratumPort(cmd_line_parser.value(port_option).toInt());
+        daemon.setStratumDirPath(cmd_line_parser.value(dir_option));
+        daemon.setCheckingInterval(
+            cmd_line_parser.value(checking_interval_option).toInt());
+
+        QMetaObject::invokeMethod(&daemon, "onConnectToStratum"
+            , Qt::QueuedConnection);
+    }
 
     return app.exec();
 }
