@@ -81,8 +81,6 @@ ADaemon::ADaemon(QObject *parent)
 
     _process = new QProcess(this);
     _process->setWorkingDirectory(_stratum_dname);
-
-    createPidFile();
 }
 
 
@@ -115,9 +113,9 @@ void ADaemon::setStratumPort(int port) {if(port > 0) _stratum_port = port;}
 void ADaemon::setStratumDirPath(const QString &dname) {
     if(!dname.isEmpty()) {
         _stratum_dname = dname; _process->setWorkingDirectory(dname);
-
-        createPidFile();
     }
+
+    createPidFile();
 }
 
 

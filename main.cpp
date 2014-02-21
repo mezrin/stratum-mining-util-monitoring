@@ -61,19 +61,20 @@ int startProcess(int argc, char *argv[]) {
     cmd_line_parser.addOption(service_option);
     cmd_line_parser.process(app);
 
-    if(!cmd_line_parser.isSet(service_option)) {
-        ADaemon daemon(&app);
-        QObject::connect(&daemon, SIGNAL(sigterm()), &app, SLOT(quit()));
+    if(cmd_line_parser.isSet("h") || cmd_line_parser.isSet("help"))
+        return app.exec();
 
-        daemon.setStratumHost(cmd_line_parser.value(host_option));
-        daemon.setStratumPort(cmd_line_parser.value(port_option).toInt());
-        daemon.setStratumDirPath(cmd_line_parser.value(dir_option));
-        daemon.setCheckingInterval(
-            cmd_line_parser.value(checking_interval_option).toInt());
+    ADaemon daemon(&app);
+    QObject::connect(&daemon, SIGNAL(sigterm()), &app, SLOT(quit()));
 
-        QMetaObject::invokeMethod(&daemon, "onConnectToStratum"
-            , Qt::QueuedConnection);
-    }
+    daemon.setStratumHost(cmd_line_parser.value(host_option));
+    daemon.setStratumPort(cmd_line_parser.value(port_option).toInt());
+    daemon.setCheckingInterval(
+        cmd_line_parser.value(checking_interval_option).toInt());
+    daemon.setStratumDirPath(cmd_line_parser.value(dir_option));
+
+    QMetaObject::invokeMethod(&daemon, "onConnectToStratum"
+        , Qt::QueuedConnection);
 
     return app.exec();
 }
