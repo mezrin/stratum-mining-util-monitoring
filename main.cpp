@@ -5,8 +5,10 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QTextCodec>
 #include <QtCore/QLocale>
+#include <QtCore/QDir>
 
-#include "adaemon.h"
+#include "astratummonitor.h"
+#include "alogger.h"
 
 // ========================================================================== //
 // Функция запуска процесса.
@@ -49,7 +51,7 @@ int startProcess(int argc, char *argv[]) {
                 , "Stratum checking interval, default 5"),
             QCoreApplication::translate("main", "seconds"));
 
-    QCommandLineOption service_option(
+    QCommandLineOption terminal_option(
         QStringList() << "t" << "terminal",
             QCoreApplication::translate("main"
                 , "Start application in interactive mode."));
@@ -58,23 +60,33 @@ int startProcess(int argc, char *argv[]) {
     cmd_line_parser.addOption(port_option);
     cmd_line_parser.addOption(dir_option);
     cmd_line_parser.addOption(checking_interval_option);
-    cmd_line_parser.addOption(service_option);
+    cmd_line_parser.addOption(terminal_option);
     cmd_line_parser.process(app);
 
     if(cmd_line_parser.isSet("h") || cmd_line_parser.isSet("help"))
         return app.exec();
 
-    ADaemon daemon(&app);
-    QObject::connect(&daemon, SIGNAL(sigterm()), &app, SLOT(quit()));
+    QString work_path = cmd_line_parser.value(dir_option);
+    if(!work_path.isEmpty()) {
+        if(QDir(work_path).exists()) {
+            ALogger::instance().setFileName(work_path + "/stratumon.log");
+        }
+    }
 
-    daemon.setStratumHost(cmd_line_parser.value(host_option));
-    daemon.setStratumPort(cmd_line_parser.value(port_option).toInt());
-    daemon.setCheckingInterval(
+    ALogger::instance()
+        .setHasTerminalLog(cmd_line_parser.isSet(terminal_option));
+
+    AStratumMonitor *monitor = new AStratumMonitor(&app);
+    monitor->setHost(cmd_line_parser.value(host_option));
+    monitor->setPort(cmd_line_parser.value(port_option).toInt());
+    monitor->setWorkPath(work_path);
+    monitor->setCheckingInterval(
         cmd_line_parser.value(checking_interval_option).toInt());
-    daemon.setStratumDirPath(cmd_line_parser.value(dir_option));
 
-    QMetaObject::invokeMethod(&daemon, "onConnectToStratum"
-        , Qt::QueuedConnection);
+    QObject::connect(monitor, SIGNAL(sigterm()), &app, SLOT(quit()));
+    QObject::connect(&app, SIGNAL(aboutToQuit()), monitor, SLOT(stop()));
+
+    QMetaObject::invokeMethod(monitor, "start", Qt::QueuedConnection);
 
     return app.exec();
 }

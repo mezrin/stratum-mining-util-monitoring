@@ -13,13 +13,15 @@ CONFIG -= app_bundle
 TEMPLATE = app
 
 SOURCES += main.cpp \
-	adaemon.cpp \
-    alogger.cpp
+    alogger.cpp \
+    amonitor.cpp \
+    astratummonitor.cpp
 
 HEADERS += \
-	adaemon.h \
     alogger.h \
-    asingleton.h
+    asingleton.h \
+    amonitor.h \
+    astratummonitor.h
 
 OTHER_FILES += \
 	README.md
