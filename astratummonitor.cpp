@@ -52,7 +52,9 @@ void AStratumMonitor::setPort(int port) {
 // ========================================================================== //
 // Функция запуска мониторинга.
 // ========================================================================== //
-void AStratumMonitor::onBegin() {_socket->connectToHost(_host, _port);}
+void AStratumMonitor::onBegin() {
+    _state = STATE_RDY_WRITE; _socket->connectToHost(_host, _port);
+}
 
 
 // ========================================================================== //
