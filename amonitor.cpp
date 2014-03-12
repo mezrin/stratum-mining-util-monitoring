@@ -66,7 +66,7 @@ bool AMonitor::isActive() const {return _active;}
 // Функция установки интервала проверки.
 // ========================================================================== //
 void AMonitor::setCheckingInterval(int interval) {
-    if(interval > 0) _timer->setInterval(interval);
+    if(interval > 0) _timer->setInterval(interval*1000);
 }
 
 
