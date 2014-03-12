@@ -15,9 +15,6 @@ class AStratumMonitor : public AMonitor {
         //! Деструктор.
         virtual ~AStratumMonitor() {}
 
-        //! Функция установки хоста.
-        void setHost(const QString &host);
-
         //! Функция установки порта.
         void setPort(int port);
 
@@ -41,6 +38,9 @@ class AStratumMonitor : public AMonitor {
         int _port;
 
         QTcpSocket *_socket;
+
+        //! Функция перезапуска пула.
+        void restartStratum();
 
     private slots:
         //! Слот приёма сетевых сообщений.

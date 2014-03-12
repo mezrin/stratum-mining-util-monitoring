@@ -27,12 +27,6 @@ int startProcess(int argc, char *argv[]) {
     cmd_line_parser.setApplicationDescription("stratumon");
     cmd_line_parser.addHelpOption();
 
-    QCommandLineOption host_option(
-        QStringList() << "i" << "stratum-host",
-            QCoreApplication::translate("main"
-                , "Domain or IP-address, default localhost"),
-            QCoreApplication::translate("main", "host"));
-
     QCommandLineOption port_option(
         QStringList() << "p" << "stratum-port",
             QCoreApplication::translate("main"
@@ -56,7 +50,6 @@ int startProcess(int argc, char *argv[]) {
             QCoreApplication::translate("main"
                 , "Start application in interactive mode."));
 
-    cmd_line_parser.addOption(host_option);
     cmd_line_parser.addOption(port_option);
     cmd_line_parser.addOption(dir_option);
     cmd_line_parser.addOption(checking_interval_option);
@@ -77,7 +70,6 @@ int startProcess(int argc, char *argv[]) {
         .setHasTerminalLog(cmd_line_parser.isSet(terminal_option));
 
     AStratumMonitor *monitor = new AStratumMonitor(&app);
-    monitor->setHost(cmd_line_parser.value(host_option));
     monitor->setPort(cmd_line_parser.value(port_option).toInt());
     monitor->setWorkPath(work_path);
     monitor->setCheckingInterval(

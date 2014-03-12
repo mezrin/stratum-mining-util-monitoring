@@ -86,6 +86,8 @@ void AMonitor::setWorkPath(const QString &path) {
 
         _work_path = path;
 
+        if(_work_path.endsWith('/')) _work_path.resize(_work_path.length()-1);
+
         if(active) start();
     }
 }
