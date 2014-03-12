@@ -45,6 +45,12 @@ int startProcess(int argc, char *argv[]) {
                 , "Stratum checking interval, default 5"),
             QCoreApplication::translate("main", "seconds"));
 
+    QCommandLineOption number_of_checks_option(
+        QStringList() << "n" << "number-of-checks",
+            QCoreApplication::translate("main"
+                , "Number of stratum checks, default 100"),
+            QCoreApplication::translate("main", "checks"));
+
     QCommandLineOption terminal_option(
         QStringList() << "t" << "terminal",
             QCoreApplication::translate("main"
@@ -53,6 +59,7 @@ int startProcess(int argc, char *argv[]) {
     cmd_line_parser.addOption(port_option);
     cmd_line_parser.addOption(dir_option);
     cmd_line_parser.addOption(checking_interval_option);
+    cmd_line_parser.addOption(number_of_checks_option);
     cmd_line_parser.addOption(terminal_option);
     cmd_line_parser.process(app);
 
@@ -71,6 +78,8 @@ int startProcess(int argc, char *argv[]) {
 
     AStratumMonitor *monitor = new AStratumMonitor(&app);
     monitor->setPort(cmd_line_parser.value(port_option).toInt());
+    monitor->setNumberOfChecks(
+        cmd_line_parser.value(number_of_checks_option).toInt());
     monitor->setWorkPath(work_path);
     monitor->setCheckingInterval(
         cmd_line_parser.value(checking_interval_option).toInt());

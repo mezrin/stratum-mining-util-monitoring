@@ -18,6 +18,9 @@ class AStratumMonitor : public AMonitor {
         //! Функция установки порта.
         void setPort(int port);
 
+        //! Функция установки лимита проверок активности стратума.
+        void setNumberOfChecks(int number_of_checks);
+
     protected:
         //! Функция запуска мониторинга.
         virtual void onBegin();
@@ -36,6 +39,8 @@ class AStratumMonitor : public AMonitor {
         QString _host;
 
         int _port;
+
+        int _number_of_checks, _checks;
 
         QTcpSocket *_socket;
 

@@ -1,3 +1,4 @@
+#include <QtCore/QCoreApplication>
 #include <QtCore/QProcess>
 #include <QtCore/QFile>
 
@@ -11,7 +12,8 @@
 // ========================================================================== //
 AStratumMonitor::AStratumMonitor(QObject *parent)
     : AMonitor("stratumon", parent), _state(STATE_RDY_WRITE), _host("localhost")
-    , _port(3337), _socket(new QTcpSocket(this)) {
+    , _port(3337), _number_of_checks(100), _checks(0)
+    , _socket(new QTcpSocket(this)) {
 
     connect(_socket, SIGNAL(readyRead()), this, SLOT(onSocketReadyRead()));
     connect(_socket, SIGNAL(error(QAbstractSocket::SocketError))
@@ -28,6 +30,21 @@ void AStratumMonitor::setPort(int port) {
         if(active) stop();
 
         _port = port;
+
+        if(active) start();
+    }
+}
+
+
+// ========================================================================== //
+// Функция установки лимита проверок активности стратума.
+// ========================================================================== //
+void AStratumMonitor::setNumberOfChecks(int number_of_checks) {
+    if(number_of_checks > 0) {
+        const bool active = isActive();
+        if(active) stop();
+
+        _number_of_checks = number_of_checks;
 
         if(active) start();
     }
@@ -67,9 +84,11 @@ void AStratumMonitor::onCheck() {
         } break;
 
         case STATE_RDY_READ: {
-            logWarn("stratum is not bind");
+            logWarn("stratum is not bind"); _socket->abort();
 
-            _socket->abort(); restartStratum();
+            if(++_checks >= _number_of_checks) {qApp->quit(); return;}
+
+            restartStratum();
 
             _state = STATE_RDY_WRITE;
         } break;
@@ -118,7 +137,7 @@ void AStratumMonitor::restartStratum() {
 // Слот приёма сетевых сообщений.
 // ========================================================================== //
 void AStratumMonitor::onSocketReadyRead() {
-    onEnd(); logInfo("stratum is alive");
+    _checks = 0; onEnd(); logInfo("stratum is alive");
 }
 
 
@@ -126,5 +145,9 @@ void AStratumMonitor::onSocketReadyRead() {
 // Слот обработки ошибок сетевой передачи данных.
 // ========================================================================== //
 void AStratumMonitor::onSocketError() {
-    logWarn(_socket->errorString()); _socket->abort(); restartStratum();
+    logWarn(_socket->errorString()); _socket->abort();
+
+    if(++_checks >= _number_of_checks) {qApp->quit(); return;}
+
+    restartStratum();
 }
