@@ -1,5 +1,6 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QProcess>
+#include <QtCore/QTimer>
 #include <QtCore/QFile>
 
 #include <QtNetwork/QTcpSocket>
@@ -80,10 +81,14 @@ void AStratumMonitor::onCheck() {
 
             _socket->write(data);
 
+            _timer->setInterval(_checking_timeout*1000);
+
             _state = STATE_RDY_READ;
         } break;
 
         case STATE_RDY_READ: {
+            _timer->setInterval(_checking_interval*1000);
+
             logWarn("stratum is not bind"); _socket->abort();
 
             if(++_checks >= _number_of_checks) {qApp->quit(); return;}
@@ -137,6 +142,8 @@ void AStratumMonitor::restartStratum() {
 // Слот приёма сетевых сообщений.
 // ========================================================================== //
 void AStratumMonitor::onSocketReadyRead() {
+    _timer->setInterval(_checking_interval*1000);
+
     _checks = 0; onEnd(); logInfo("stratum is alive");
 }
 
@@ -145,6 +152,8 @@ void AStratumMonitor::onSocketReadyRead() {
 // Слот обработки ошибок сетевой передачи данных.
 // ========================================================================== //
 void AStratumMonitor::onSocketError() {
+    _timer->setInterval(_checking_interval*1000);
+
     logWarn(_socket->errorString()); _socket->abort();
 
     if(++_checks >= _number_of_checks) {qApp->quit(); return;}

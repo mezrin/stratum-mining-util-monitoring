@@ -28,8 +28,8 @@ void AMonitor::sigTermHandler(int) {
 // Конструктор.
 // ========================================================================== //
 AMonitor::AMonitor(const QString &process_name, QObject *parent)
-    : QObject(parent), _sig_term_notifier(NULL), _active(false)
-    , _timer(new QTimer(this))
+    : QObject(parent), _timer(new QTimer(this)), _checking_interval(5)
+    , _checking_timeout(5), _sig_term_notifier(NULL), _active(false)
     , _work_path(QCoreApplication::applicationDirPath())
     , _process_name(process_name) {
 
@@ -49,7 +49,7 @@ AMonitor::AMonitor(const QString &process_name, QObject *parent)
             , this, SLOT(onSigTermHandle()));
     }
 
-    _timer->setInterval(5000);
+    _timer->setInterval(_checking_interval*1000);
     _timer->setSingleShot(true);
 
     connect(_timer, SIGNAL(timeout()), this, SLOT(onTimerTimeout()));
@@ -66,7 +66,15 @@ bool AMonitor::isActive() const {return _active;}
 // Функция установки интервала проверки.
 // ========================================================================== //
 void AMonitor::setCheckingInterval(int interval) {
-    if(interval > 0) _timer->setInterval(interval*1000);
+    if(interval > 0) _checking_interval = interval;
+}
+
+
+// ========================================================================== //
+// Функция установки интервала проверки.
+// ========================================================================== //
+void AMonitor::setCheckingTimeout(int interval) {
+    if(interval > 0) _checking_timeout = interval;
 }
 
 
@@ -101,7 +109,11 @@ void AMonitor::start() {
 
     logInfo("stratumon started");
 
-    createPidFile(); _timer->start(); _active = true; onBegin(); emit started();
+    createPidFile();
+
+    _timer->setInterval(_checking_interval*1000); _timer->start();
+
+    _active = true; onBegin(); emit started();
 }
 
 

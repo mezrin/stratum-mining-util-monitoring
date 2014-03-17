@@ -31,6 +31,9 @@ class AMonitor : public QObject {
         //! Функция установки интервала проверки.
         void setCheckingInterval(int interval);
 
+        //! Функция установки интервала проверки.
+        void setCheckingTimeout(int interval);
+
         //! Функция возврата директории.
         QString workPath() const;
 
@@ -45,6 +48,10 @@ class AMonitor : public QObject {
         void stop();
 
     protected:
+        QTimer *_timer;
+
+        int _checking_interval, _checking_timeout;
+
         //! Функция запуска мониторинга.
         virtual void onBegin() = 0;
 
@@ -58,8 +65,6 @@ class AMonitor : public QObject {
         QSocketNotifier *_sig_term_notifier;
 
         bool _active;
-
-        QTimer *_timer;
 
         QString _work_path, _process_name;
 
