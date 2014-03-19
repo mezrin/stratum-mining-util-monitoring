@@ -57,6 +57,11 @@ int startProcess(int argc, char *argv[]) {
                 , "Number of stratum checks, default 100"),
             QCoreApplication::translate("main", "checks"));
 
+    QCommandLineOption algorithm_option(
+        QStringList() << "a" << "algorithm",
+            QCoreApplication::translate("main"
+                , "Stratum algorithm, default scrypt"));
+
     QCommandLineOption terminal_option(
         QStringList() << "t" << "terminal",
             QCoreApplication::translate("main"
@@ -67,6 +72,7 @@ int startProcess(int argc, char *argv[]) {
     cmd_line_parser.addOption(checking_interval_option);
     cmd_line_parser.addOption(checking_timeout_option);
     cmd_line_parser.addOption(number_of_checks_option);
+    cmd_line_parser.addOption(algorithm_option);
     cmd_line_parser.addOption(terminal_option);
     cmd_line_parser.process(app);
 
@@ -92,6 +98,7 @@ int startProcess(int argc, char *argv[]) {
         cmd_line_parser.value(checking_interval_option).toInt());
     monitor->setCheckingTimeout(
         cmd_line_parser.value(checking_timeout_option).toInt());
+    monitor->setAlgorithm(cmd_line_parser.value(algorithm_option));
 
     QObject::connect(monitor, SIGNAL(sigterm()), &app, SLOT(quit()));
     QObject::connect(&app, SIGNAL(aboutToQuit()), monitor, SLOT(stop()));

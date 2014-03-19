@@ -13,12 +13,27 @@
 // ========================================================================== //
 AStratumMonitor::AStratumMonitor(QObject *parent)
     : AMonitor("stratumon", parent), _state(STATE_RDY_WRITE), _host("localhost")
-    , _port(3337), _number_of_checks(100), _checks(0)
+    , _algorithm("scrypt"), _port(3337), _number_of_checks(100), _checks(0)
     , _socket(new QTcpSocket(this)) {
 
     connect(_socket, SIGNAL(readyRead()), this, SLOT(onSocketReadyRead()));
     connect(_socket, SIGNAL(error(QAbstractSocket::SocketError))
         , this, SLOT(onSocketError()));
+}
+
+
+// ========================================================================== //
+// Функция установки наименования алгоритма.
+// ========================================================================== //
+void AStratumMonitor::setAlgorithm(const QString &algo) {
+    if(algo == "scrypt" || algo == "keccak") {
+        const bool active = isActive();
+        if(active) stop();
+
+        _algorithm = algo;
+
+        if(active) start();
+    }
 }
 
 
@@ -130,7 +145,8 @@ void AStratumMonitor::restartStratum() {
         }
     }
 
-    process->start("twistd -y launcher.tac");
+    process->start(
+        QString("twistd --algorithm=%1 -y launcher.tac").arg(_algorithm));
     process->waitForFinished();
     process->deleteLater();
 

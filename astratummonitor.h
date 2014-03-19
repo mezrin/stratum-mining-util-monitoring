@@ -15,6 +15,9 @@ class AStratumMonitor : public AMonitor {
         //! Деструктор.
         virtual ~AStratumMonitor() {}
 
+        //! Функция установки наименования алгоритма.
+        void setAlgorithm(const QString &algo);
+
         //! Функция установки порта.
         void setPort(int port);
 
@@ -36,7 +39,7 @@ class AStratumMonitor : public AMonitor {
 
         State _state;
 
-        QString _host;
+        QString _host, _algorithm;
 
         int _port;
 
